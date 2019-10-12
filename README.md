@@ -10,6 +10,9 @@ This the repository for the text reuse project. It consists of a React and Flask
 ### Running the application
 
 To run the application, go to the root folder and execute
+
 ```
 docker-compose up
 ```
+
+You might need to add the root folder to Docker in: ` Docker -> Preferences -> File sharing`
