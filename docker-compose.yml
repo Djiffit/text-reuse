@@ -1,0 +1,31 @@
+version: '3.5'
+
+services:
+
+  flask-app:
+    container_name: flask-api
+    restart: unless-stopped
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/usr/src/app
+    depends_on:
+      - "db"
+
+  react-app:
+    container_name: react-ui
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - './frontend:/usr/src/app'
+      - '/usr/src/app/node_modules'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - "flask-app"
+    environment:
+      - NODE_ENV=development
