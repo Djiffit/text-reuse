@@ -1,0 +1,21 @@
+{
+  "extends": "tslint:recommended",
+  "rules": {
+    "lines-between-class-members": [true, 2],
+    "max-line-length": {
+      "options": [200]
+    },
+    "member-ordering": false,
+    "semicolon": [true, "never"],
+    "no-consecutive-blank-lines": false,
+    "object-literal-sort-keys": false,
+    "no-namespace": false,
+    "interface-name": false,
+    "variable-name": [false],
+    "no-shadowed-variable": false,
+    "ordered-imports": false,
+    "no-console": false,
+    "arrow-parens": false,
+    "quotemark": [true, "single"]
+  }
+}
