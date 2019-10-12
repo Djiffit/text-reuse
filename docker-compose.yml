@@ -2,6 +2,22 @@ version: '3.5'
 
 services:
 
+  db:
+    container_name: neo4j-db
+    image: neo4j:3.5
+    restart: unless-stopped
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    volumes:
+      - ./db/db:/data
+      - ./db/db_logs:/logs
+      - ./db/db_import:/var/lib/neo4j/import
+      - ./db/db_plugins:/plugins
+    environment:
+      - NEO4J_AUTH=neo4j/test
+
+
   flask-app:
     container_name: flask-api
     restart: unless-stopped
@@ -12,6 +28,8 @@ services:
       - "5000:5000"
     volumes:
       - ./backend:/usr/src/app
+    depends_on:
+      - "db"
 
   react-app:
     container_name: react-ui
