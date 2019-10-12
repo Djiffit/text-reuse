@@ -16,3 +16,5 @@ docker-compose up
 ```
 
 You might need to add the root folder to Docker in: ` Docker -> Preferences -> File sharing`
+
+After running this command, the UI should be running at `localhost:3000` and the API at `localhost:5000`
