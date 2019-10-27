@@ -16,7 +16,10 @@ services:
       - ./db/db_plugins:/plugins
     environment:
       - NEO4J_AUTH=neo4j/test
-
+      - NEO4J_HEAP_MEMORY=8G
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4j_dbms_memory_heap_initial__size=4G
+      - NEO4j_dbmd_memory_heap_max__size=16G
 
   flask-app:
     container_name: flask-api
@@ -45,3 +48,25 @@ services:
       - "flask-app"
     environment:
       - NODE_ENV=development
+
+    
+  graphql-api:
+    container_name: graphql-api
+    build:
+      context: ./graphql
+      dockerfile: Dockerfile
+    volumes:
+      - './graphql:/usr/src/app'
+      - '/usr/src/app/node_modules'
+    links:
+        - "db:database"
+    ports:
+      - '8000:8000'
+    depends_on:
+      - "db"
+    environment:
+      - NODE_ENV=development
+      - DEBUG=neo4j-graphql-js
+      - NEO4J_USER=neo4j
+      - NEO4J_PASS=test
+      - NEO$J_HOST=database
