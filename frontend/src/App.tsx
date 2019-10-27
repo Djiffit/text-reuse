@@ -1,38 +1,69 @@
 import React, { useEffect, useState } from 'react'
+import ApolloClient from 'apollo-boost'
 import './App.css'
-import axios from 'axios'
+import { ApolloProvider } from '@apollo/react-hooks'
+import styled from 'styled-components'
+import FilterView from 'components/FilterView'
+import GraphList from 'components/GraphList'
+import AppBar from '@material-ui/core/AppBar'
+import { Typography } from '@material-ui/core'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+import { createStore } from 'redux'
+import { filterReducer } from 'store/filterReducer'
+import { Provider } from 'react-redux'
+
+const client = new ApolloClient({
+  uri: 'http://0.0.0.0:8000/graphql',
+})
+
+const store = createStore(filterReducer)
+
+const GridWrapper = styled.div`
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: 1fr 3fr;
+`
+
+const Header = styled.div`
+  grid-column: 1 / -1;
+  clear: both;
+`
+
+const HeaderTitle = styled.h5`
+  margin: 25px 50px;
+  font-size: 23px;
+`
 
 const App: React.FC = () => {
   const [things, setThings] = useState([{}])
 
-  useEffect(() => {
-    test()
-  }, [])
-
-  const test = async () => {
-    const res = await axios.get('http://localhost:5000/')
-    setThings(res.data)
-  }
-
   return (
-    <div className='App'>
-      <header className='App-header'>
-        <p>
-          Api results:
-          {things.map((t: any) => (
-            <div>{t.test}</div>
-          ))}
-        </p>
-        <a
-          className='App-link'
-          href='https://reactjs.org'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ApolloProvider client={client}>
+      <Provider store={store}>
+        <Router>
+          <AppBar position='static' color='secondary'>
+            <HeaderTitle>
+              Text reuse application thingymadingy
+            </HeaderTitle>
+          </AppBar>
+          <Switch>
+            <Route path='/visualize'>
+              <GridWrapper>
+                <FilterView />
+                <GraphList />
+              </GridWrapper>
+            </Route>
+            <Route path='/compare'>
+              <h1>Compare view Someday hopefully</h1>
+            </Route>
+            <Route path='/'>
+              <FilterView />
+              <FilterView />
+            </Route>
+          </Switch>
+        </Router>
+      </Provider>
+    </ApolloProvider>
   )
 }
 
