@@ -7,11 +7,7 @@ const driver = neo4j.driver(
   `bolt://${process.env.NEO}:7687`,
   neo4j.auth.basic(process.env.NEO4J_USER, process.env.NEO4J_PASS))
 
-
 const typeDefs = readFileSync('./typeDefs.graphql', 'utf-8')
-
-// MATCH (t:Text {text_id: "N11595"})
-// MATCH ()-[r:USES_FRAGMENT]->(t) RETURN count(r)
 
 const schema = makeAugmentedSchema({ typeDefs })
 
