@@ -1,0 +1,27 @@
+type Actor { name: String! actor_id: String! }
+type Place { place: String! }
+type Year { 
+  year: String!
+}
+type Text { 
+  text_id: String!, title: String! 
+  publication_year: Year @relation(name: "PUBLISHED_IN", direction: "OUT")
+  publication_location: Place @relation(name: "HAS_LOCATION", direction: "OUT")
+  author: [Actor] @relation(name: "HAS_AUTHOR", direction: "OUT")
+  publisher: [Actor] @relation(name: "HAS_PUBLISHER", direction: "OUT")
+  copies_from: [Text] @relation(name: "USES_FRAGMENT", direction: "OUT")
+  fragment_users: [Text] @relation(name: "USES_FRAGMENT", direction: "IN")
+  num_copiers: Int @cypher(statement:
+  """
+    MATCH ()-[r:USES_FRAGMENT]->(this)
+    RETURN count(r)
+  """
+  )
+  num_copied: Int @cypher(statement:
+  """
+    MATCH (this)-[r:USES_FRAGMENT]->()
+    RETURN count(r)
+  """
+  )
+  total_connections: Int @cypher(statement: "RETURN SIZE((this)-->()) + SIZE(()-->(this))")
+}
