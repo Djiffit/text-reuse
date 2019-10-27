@@ -42,10 +42,13 @@ services:
     volumes:
       - './frontend:/usr/src/app'
       - '/usr/src/app/node_modules'
+    links:
+        - "graphql-api:gql-api"
     ports:
       - '3000:3000'
     depends_on:
       - "flask-app"
+      - "graphql-api"
     environment:
       - NODE_ENV=development
 
