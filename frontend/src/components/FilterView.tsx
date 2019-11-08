@@ -4,6 +4,7 @@ import { Paper, TextField, Divider, Checkbox, FormControlLabel, Button } from '@
 import { useSelector, useDispatch } from 'react-redux'
 import { FilterState, FilterKeys } from 'types/types'
 import { Link } from 'react-router-dom'
+import Visualizer from './Visualization'
 
 const Wrapper = styled.div`
     margin: 30px;
@@ -28,6 +29,7 @@ const FilterView = () => {
     }
 
     return <Wrapper>
+        <Visualizer />
         <Paper elevation={5} style={{ padding: '20px 50px', minHeight: '90vh' }}>
             <Title>
                 Filters
