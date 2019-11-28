@@ -2,37 +2,46 @@ version: '3.5'
 
 services:
 
-  db:
-    container_name: neo4j-db
-    image: neo4j:3.5
-    restart: unless-stopped
-    ports:
-      - "7687:7687"
-      - "7474:7474"
-    volumes:
-      - ./db/db:/data
-      - ./db/db_logs:/logs
-      - ./db/db_import:/var/lib/neo4j/import
-      - ./db/db_plugins:/plugins
-    environment:
-      - NEO4J_AUTH=neo4j/test
-      - NEO4J_HEAP_MEMORY=8G
-      - NEO4J_dbms_memory_pagecache_size=1G
-      - NEO4j_dbms_memory_heap_initial__size=4G
-      - NEO4j_dbmd_memory_heap_max__size=16G
+  # db:
+  #   container_name: neo4j-db
+  #   image: neo4j:3.5
+  #   restart: unless-stopped
+  #   ports:
+  #     - "7687:7687"
+  #     - "7474:7474"
+  #   volumes:
+  #     - ./db/db:/data
+  #     - ./db/db_logs:/logs
+  #     - ./db/db_import:/var/lib/neo4j/import
+  #     - ./db/db_plugins:/plugins
+  #   environment:
+  #     - NEO4J_AUTH=neo4j/test
+  #     - NEO4J_HEAP_MEMORY=8G
+  #     - NEO4J_dbms_memory_pagecache_size=1G
+  #     - NEO4j_dbms_memory_heap_initial__size=4G
+  #     - NEO4j_dbmd_memory_heap_max__size=16G
 
-  flask-app:
-    container_name: flask-api
-    restart: unless-stopped
-    build:
-      context: ./backend/
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
+  db:
+    container_name: tr-pg
+    image: postgres:12.0
     volumes:
-      - ./backend:/usr/src/app
-    depends_on:
-      - "db"
+      - './tmp/db:/var/lib/postgresql/data'
+    ports:
+      - '5432:5432'
+
+
+  # flask-app:
+  #   container_name: flask-api
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./backend/
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./backend:/usr/src/app
+  #   depends_on:
+  #     - "db"
 
   react-app:
     container_name: react-ui
@@ -47,7 +56,6 @@ services:
     ports:
       - '3000:3000'
     depends_on:
-      - "flask-app"
       - "graphql-api"
     environment:
       - NODE_ENV=development
@@ -69,7 +77,5 @@ services:
       - "db"
     environment:
       - NODE_ENV=development
-      - DEBUG=neo4j-graphql-js
-      - NEO4J_USER=neo4j
-      - NEO4J_PASS=test
-      - NEO$J_HOST=database
+      - connection=postgres://postgres:@db:5432/postgres
+ 
