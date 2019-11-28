@@ -13,7 +13,7 @@ import { filterReducer } from 'store/filterReducer'
 import { Provider } from 'react-redux'
 
 const client = new ApolloClient({
-  uri: 'http://0.0.0.0:8000/graphql',
+  uri: 'http://localhost:8000/graphql',
 })
 
 const store = createStore(filterReducer)
@@ -36,7 +36,6 @@ const HeaderTitle = styled.h5`
 
 const App: React.FC = () => {
   const [things, setThings] = useState([{}])
-
   return (
     <ApolloProvider client={client}>
       <Provider store={store}>

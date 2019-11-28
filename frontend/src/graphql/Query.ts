@@ -1,31 +1,19 @@
 import gql from 'graphql-tag'
 
 export const GET_CONNECTIONS = gql`
-    query getConnections($filter: _TextFilter) {
-        Text(filter: $filter, first: 200) {
-            text_id
-            title
-            publication_year {
+    query getReuses($author: String, $yearStart: Int, $yearEnd: Int, $title: String, $location: String, $internal: Boolean, $external: Boolean) {
+        reuses(author: $author, yearStart: $yearStart, yearEnd: $yearEnd, title: $title, location: $location, internal: $internal, external: $external ) {
+            reuses {
+                source
+                reuser
+                count
+            }
+            texts {
+                id
                 year
-            }
-            publication_location {
-                place
-            }
-            author {
-                name
-            }
-            copies_from {
+                author
                 title
-                text_id
-                author {
-                    name
-                }
-                publication_location {
-                    place
-                }
-                publication_year {
-                    year
-                }
+                location
             }
         }
     }

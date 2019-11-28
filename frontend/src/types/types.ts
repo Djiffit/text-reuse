@@ -1,8 +1,11 @@
 export interface FilterState {
     textTitle: string
     authorTitle: string
-    year: string
+    yearStart: string
+    yearEnd: string
     location: string
+    internal: boolean
+    external: boolean
 }
 
 export interface UpdateFiltersAction {
@@ -10,4 +13,4 @@ export interface UpdateFiltersAction {
     filters: FilterState
 }
 
-export type FilterKeys = 'textTitle' | 'authorTitle' | 'year' | 'location'
+export type FilterKeys = 'textTitle' | 'authorTitle' | 'yearEnd' | 'location' | 'yearStart' | 'internal' | 'external'
