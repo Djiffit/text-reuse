@@ -6,6 +6,7 @@ import { FilterState, FilterKeys } from 'types/types'
 import { Link } from 'react-router-dom'
 import Visualizer from './Visualization'
 import { YEAR_FIELD, YEAR_START, YEAR_END } from 'util/constants'
+import NetworkFrame from 'semiotic/lib/NetworkFrame'
 
 const Wrapper = styled.div`
     margin: 30px;
@@ -89,10 +90,14 @@ const FilterView = () => {
             disabled={visualizing}
             style={{ width: '100%' }}
         />
+
+
     }
+
 
     return <Wrapper>
         <Paper elevation={5} style={{ padding: '20px 50px', minHeight: '90vh' }}>
+
             <Title>
                 Filters
             </Title>
@@ -125,3 +130,5 @@ const FilterView = () => {
 }
 
 export default FilterView
+
+

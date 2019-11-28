@@ -42,7 +42,7 @@ const App: React.FC = () => {
         <Router>
           <AppBar position='static' color='secondary'>
             <HeaderTitle>
-              Text reuse application thingymadingy
+              Text reuse application
             </HeaderTitle>
           </AppBar>
           <Switch>
