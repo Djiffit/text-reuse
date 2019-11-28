@@ -67,8 +67,6 @@ const GraphList = () => {
     const reuses = edges
     const texts = nodes
 
-    console.log(JSON.stringify(texts))
-
     const sources = new Set([]) as any
 
     reuses.forEach(r => sources.add(r.source))
