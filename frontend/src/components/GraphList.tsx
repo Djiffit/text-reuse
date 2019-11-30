@@ -20,7 +20,7 @@ import ResponsiveOrdinalFrame from 'semiotic/lib/ResponsiveOrdinalFrame'
 
 const mapToQueryFilters = (f: FilterState) => {
     const filters = {
-        title: f.textTitle || 'death',
+        title: f.textTitle || 'Death',
         author: f.authorTitle,
         yearStart: f.yearStart && Number(f.yearStart) || 0,
         yearEnd: f.yearEnd && Number(f.yearEnd) || 2000,
@@ -46,7 +46,7 @@ const makeCSV = (reuses, texts) => {
 const GraphList = () => {
     const [active, setActive] = useState(new Set([]))
     const [activeNode, setActiveNode] = useState({}) as any
-    const [value, setValue] = useState(0)
+    const [value, setValue] = useState(1)
     const filters = useSelector((state: FilterState) => state)
     // const { loading, error, data } = useQuery(GET_CONNECTIONS, {
     //     variables: {
@@ -67,6 +67,10 @@ const GraphList = () => {
     //     </div>
     // }
 
+    // const { reuses, texts } = data.reuses
+    const reuses = edges
+    const texts = nodes
+
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setValue(newValue)
     }
@@ -79,9 +83,7 @@ const GraphList = () => {
         }
     }
 
-    // const { reuses, texts } = data.reuses
-    const reuses = edges
-    const texts = nodes
+
 
     const sources = new Set([]) as any
 
@@ -90,7 +92,7 @@ const GraphList = () => {
     const textsById = {}
     texts.forEach(t => textsById[t.id] = t)
 
-    const targetsForFilter = reuses.filter(({ source }) => sources.has(source)).map(({ reuser }) => textsById[reuser])
+    const targetsForFilter = (Array.from((new Set(reuses.filter(({ source }) => sources.has(source)).map(({ reuser }) => reuser))))).map((reuser: any) => textsById[reuser])
 
 
     // const texts_by_id = {}
@@ -115,74 +117,76 @@ const GraphList = () => {
 
 
     // console.log(Object.values(texts_by_id), texts_by_id, texts)
-    console.log(reuses.length, texts.length)
 
     return <div>
-        <p>Graph results</p>
-        <CSVLink data={makeCSV(reuses, texts)}>Download data as CSV</CSVLink>
-
-        {activeNode && activeNode.id && <Paper style={{padding: '10px', position: 'absolute', top: `${window.innerHeight * 0.20}px`, left: `${window.innerWidth * .30}px`, zIndex: 1000000, backgroundColor: 'white', width: '300px'}}>
-            {activeNode.id && <p style={{margin: 0}}><b>ID:</b> {activeNode.id}</p>}
-            {activeNode.title && <p style={{margin: 0}}><b>Title:</b> {activeNode.title}</p>}
-            {activeNode.author && <p style={{margin: 0}}><b>Authors:</b> {activeNode.author.split('|||').join(', ')}</p>}
-            {activeNode.location && <p style={{margin: 0}}><b>Location:</b> {activeNode.location}</p>}
-            {activeNode.year && <p style={{margin: 0}}><b>Year:</b> {activeNode.year}</p>}
-        </Paper>}
-<Paper style={{marginRight: '50px', maxWidth: '70vw'}}>
+        <CSVLink filename={'text-reuse-export.csv'} data={makeCSV(reuses, texts)}>Download data as CSV</CSVLink>
+        <Paper style={{ marginRight: '50px', maxWidth: '70vw' }}>
             <Tabs
-            value={value}
-            onChange={handleChange}
-            indicatorColor='primary'
-            textColor='primary'
-            variant='fullWidth'
-            aria-label='full width tabs example'
+                value={value}
+                onChange={handleChange}
+                indicatorColor='primary'
+                textColor='primary'
+                variant='fullWidth'
+                aria-label='full width tabs example'
             >
-            <Tab label='Graph visualization' {...a11yProps(0)} />
-            <Tab label='Node and edge visualization' {...a11yProps(1)} />
-            <Tab label='Node data list' {...a11yProps(2)} />
+                <Tab label='Graph visualization' {...a11yProps(0)} />
+                <Tab label='Node and edge visualization' {...a11yProps(1)} />
+                <Tab label='Node data list' {...a11yProps(2)} />
             </Tabs>
-            {value === 0 && <GraphVis sources={sources} setActiveNode={setActiveNode} texts={texts} reuses={reuses} />}
-            {value === 1 && <p>testi2</p>}
-            {value === 2 && <p>testi3</p>}
+            {<div style={{ display: value !== 0 ? 'none' : 'inherit' }}>
+                {activeNode && value === 0 && activeNode.id && <Paper style={{ padding: '10px', position: 'absolute', marginLeft: '30px', marginTop: '30px', zIndex: 1000000, backgroundColor: 'white', width: '300px' }}>
+                    {activeNode.id && <p style={{ margin: 0 }}><b>ID:</b> {activeNode.id}</p>}
+                    {activeNode.title && <p style={{ margin: 0 }}><b>Title:</b> {activeNode.title}</p>}
+                    {activeNode.author && <p style={{ margin: 0 }}><b>Authors:</b> {activeNode.author.split('|||').join(', ')}</p>}
+                    {activeNode.location && <p style={{ margin: 0 }}><b>Location:</b> {activeNode.location}</p>}
+                    {activeNode.year && <p style={{ margin: 0 }}><b>Year:</b> {activeNode.year}</p>}
+                </Paper>}
+                <GraphVis sources={sources} setActiveNode={setActiveNode} nodesById={textsById} texts={texts} reuses={reuses} />
+            </div>}
+            {<div style={{ display: value !== 1 ? 'none' : 'inherit' }}><Visualizations nodes={texts} filteredTexts={filteredTexts} edges={reuses} /></div>}
+            {<div style={{ display: value !== 2 ? 'none' : 'inherit' }}><NodeLists reuses={reuses} sources={sources} texts={texts} textsById={textsById} /></div>}
         </Paper>
     </div >
 }
 
-const GraphVis = ({texts, sources, reuses, setActiveNode}) => {
+const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, key = 'id' }) => {
     const [frozen, setFrozen] = useState(15000)
-
     setTimeout(() => setFrozen(0), 9000)
-
-    console.log(ForceGraph2D)
+    const nodearr = key === 'id' ? texts : Array.from(new Set(texts.map(t => t[key]))).map(k => [k].reduce((p: any, c: any) => {
+        p[key] = c
+        return p
+    }, {}))
     return (
-    <div>
-        <ForceGraph2D
-            graphData={{ nodes: texts, links: reuses.map(({ source, reuser, count }) => ({ source, target: reuser, value: count })) }}
-            width={window.innerWidth * 0.7}
-            onNodeClick={(node) => setActiveNode(node)}
-            height={window.innerHeight * 0.8}
-            nodeAutoColorBy='group'
-            enableNodeDrag={false}
-            cooldownTime={frozen}
-            nodeCanvasObject={(node, ctx, globalScale) => {
-                const label = node.id
-                const fontSize = 11 / globalScale
-                ctx.font = `${fontSize}px Sans-Serif`
-                ctx.textAlign = 'center'
-                ctx.textBaseline = 'middle'
-                if (sources.has(node.id)) {
-                    ctx.fillStyle = 'red'
-                } else {
-                    ctx.fillStyle = 'blue'
-                }
-                ctx.fillText(label, node.x, node.y)
-            }}
-        />
-    </div >
+        <div>
+            <ForceGraph2D
+                graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][key], target: nodesById[reuser][key], value: count })) }}
+                width={window.innerWidth * 0.7}
+                nodeId={key}
+                onNodeClick={(node) => setActiveNode(node)}
+                height={window.innerHeight * 0.8}
+                nodeAutoColorBy='group'
+                linkWidth={((d) => Math.log(d.value) / 2)}
+                enableNodeDrag={false}
+                cooldownTime={frozen}
+                nodeCanvasObject={(node, ctx, globalScale) => {
+                    const label = node[key]
+                    const fontSize = 11 / globalScale
+                    ctx.font = `${fontSize}px Sans-Serif`
+                    ctx.textAlign = 'center'
+                    ctx.textBaseline = 'middle'
+                    if (sources.has(node.id)) {
+                        ctx.fillStyle = 'red'
+                    } else {
+                        ctx.fillStyle = 'blue'
+                    }
+                    ctx.fillText(label, node.x, node.y)
+                }}
+            />
+        </div >
     )
 }
 
-const Visualizations = (nodes, edges, filteredTexts) => {
+const Visualizations = ({ nodes, edges, filteredTexts }) => {
 
     const authors = nodes.map(n => n.author.split('|||'))// .reduce((e, s) => ([...e, s.name]), []))
     const authorCounts = {}
@@ -196,236 +200,256 @@ const Visualizations = (nodes, edges, filteredTexts) => {
 
 
     authors.forEach(y => {
-    authorCounts[y] = (authorCounts[y] || 0) + 1
-})
+        authorCounts[y] = (authorCounts[y] || 0) + 1
+    })
 
     years.forEach(y => {
-    yearCounts[y] = (yearCounts[y] || 0) + 1
-})
+        yearCounts[y] = (yearCounts[y] || 0) + 1
+    })
 
     locations.forEach(y => {
-    locCounts[y] = (locCounts[y] || 0) + 1
-})
+        locCounts[y] = (locCounts[y] || 0) + 1
+    })
 
 
 
-    const counts = Object.entries(authorCounts).map((textCount) => ({name: textCount[0], texts: textCount[1]})).sort((a: any, b: any) => a.texts > b.texts ? -1 : 1)
+    const counts = Object.entries(authorCounts).map((textCount) => ({ name: textCount[0], texts: textCount[1] })).sort((a: any, b: any) => a.texts > b.texts ? -1 : 1)
 
-    const countsY = Object.entries(yearCounts).map((count) => ({year: count[0], titles: count[1]})).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
-    const countsL = Object.entries(locCounts).map((count) => ({location: count[0], titles: count[1]})).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
+    const countsY = Object.entries(yearCounts).map((count) => ({ year: count[0], titles: count[1] })).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
+    const countsL = Object.entries(locCounts).map((count) => ({ location: count[0], titles: count[1] })).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
 
 
     const framePropsA = {
-      data: counts.slice(0, 20),
+        data: counts.slice(0, 20),
         size: [1000, 1000],
-      type: 'bar',
-    projection: 'horizontal',
-      oAccessor: 'name',
-      rAccessor: 'texts',
-      title: 'Most Common Authors',
-      axes: [{
-        orient: 'left',
-        label: 'Number of Titles',
-      }],
-    style: { fill: '#ac58e5', stroke: 'white' },
-      hoverAnnotation: true,
-      oLabel: false,
+        type: 'bar',
+        projection: 'horizontal',
+        oAccessor: 'name',
+        rAccessor: 'texts',
+        title: 'Most Common Authors',
+        axes: [{
+            orient: 'left',
+            label: 'Number of Titles',
+        }],
+        style: { fill: '#ac58e5', stroke: 'white' },
+        hoverAnnotation: true,
+        oLabel: false,
     }
 
     const framePropsL = {
-      data: countsL.slice(0, 10),
+        data: countsL.slice(0, 10),
         size: [1000, 1000],
-      type: 'bar',
-      oAccessor: 'location',
-      rAccessor: 'titles',
-      title: 'Most Common Locations',
-      axes: [{
-        orient: 'left',
-        label: 'Number of Titles',
-      }],
-
-    projection: 'horizontal',
-
-    style: { fill: '#ac58e5', stroke: 'white' },
-      hoverAnnotation: true,
-      horizontal: true,
-      oLabel: true,
-    }
-
-    const framePropsY = {
-          data: countsY.slice(0, 20),
-          horizontal: true,
-        size: [1000, 1000],
-          type: 'bar',
-          oAccessor: 'year',
-          rAccessor: 'titles',
-          title: 'Most Common Years',
-          axes: [{
+        type: 'bar',
+        oAccessor: 'location',
+        rAccessor: 'titles',
+        title: 'Most Common Locations',
+        axes: [{
             orient: 'left',
             label: 'Number of Titles',
-          }],
+        }],
 
         projection: 'horizontal',
 
         style: { fill: '#ac58e5', stroke: 'white' },
-          hoverAnnotation: true,
-          oLabel: true,
-        }
+        hoverAnnotation: true,
+        horizontal: true,
+        oLabel: true,
+    }
+
+    const framePropsY = {
+        data: countsY.slice(0, 20),
+        horizontal: true,
+        size: [1000, 1000],
+        type: 'bar',
+        oAccessor: 'year',
+        rAccessor: 'titles',
+        title: 'Most Common Years',
+        axes: [{
+            orient: 'left',
+            label: 'Number of Titles',
+        }],
+
+        projection: 'horizontal',
+
+        style: { fill: '#ac58e5', stroke: 'white' },
+        hoverAnnotation: true,
+        oLabel: true,
+    }
 
 
     const theme = ['#ac58e5', '#E0488B', '#9fd0cb', '#e0d33a', '#7566ff', '#533f82', '#7a255d', '#365350', '#a19a11', '#3f4482']
     const frameProps = {
-            nodes: nodes.filter(t => filteredTexts.has(t.id)),
-            edges: edges.filter(r => filteredTexts.has(r.source) && filteredTexts.has(r.reuser)).map(r => ({ source: r.source, target: r.reuser, value: r.count })),
-            size: [1200, 1200],
-            margin: { left: 60, top: 60, bottom: 10, right: 10 },
-            networkType: 'matrix',
-            nodeIDAccessor: 'id',
-            nodeStyle: { fill: 'none', stroke: '#DDD' },
-            edgeStyle: d => {
-                // console.log(d)
-                return {
-                    fill:  'rgb(250,0,0)', // `rgb(${d.value}, 0, 0)`,
-                    stroke: theme['#ac58e5'], // d.source.group + 1],
-                    fillOpacity: 0.75,
-                }
-            },
-            hoverAnnotation: [{ type: 'frame-hover' },
-            { type: 'highlight', style: { fill: '#ac58e5', fillOpacity: 0.25, stroke: '#E0488B' } }],
-            nodeLabels: true,
-        }
+        nodes: nodes.filter(t => filteredTexts.has(t.id)),
+        edges: edges.filter(r => filteredTexts.has(r.source) && filteredTexts.has(r.reuser)).map(r => ({ source: r.source, target: r.reuser, value: r.count })),
+        size: [1200, 1200],
+        margin: { left: 60, top: 60, bottom: 10, right: 10 },
+        networkType: 'matrix',
+        nodeIDAccessor: 'id',
+        linkColor: 'rgb(255, 0, 0)',
+        nodeStyle: { fill: 'none', stroke: '#DDD' },
+        edgeStyle: d => {
+            // console.log(d)
+            return {
+                fill: 'rgb(250,0,0)', // `rgb(${d.value}, 0, 0)`,
+                stroke: theme['#ac58e5'], // d.source.group + 1],
+                fillOpacity: 0.75,
+            }
+        },
+        hoverAnnotation: [{ type: 'frame-hover' },
+        { type: 'highlight', style: { fill: '#ac58e5', fillOpacity: 0.25, stroke: '#E0488B' } }],
+        nodeLabels: true,
+    }
     return (
-    <div>
-        <NetworkFrame {...frameProps} />
-        <ResponsiveOrdinalFrame
-            {...framePropsA}
-            responsiveWidth={true}
-        />
-        <ResponsiveOrdinalFrame
-            {...framePropsY}
-            responsiveWidth={true}
-        />
-        <ResponsiveOrdinalFrame
-            {...framePropsL}
-            responsiveWidth={true}
-        />
+        <div style={{ marginLeft: '100px' }}>
+            <NetworkFrame {...frameProps} />
+            <ResponsiveOrdinalFrame
+                {...framePropsA}
+                responsiveWidth={true}
+            />
+            <ResponsiveOrdinalFrame
+                {...framePropsY}
+                responsiveWidth={true}
+            />
+            <ResponsiveOrdinalFrame
+                {...framePropsL}
+                responsiveWidth={true}
+            />
+        </div>)
+}
+
+
+const makeNodeCSV = (nodes) => {
+    const columns = ['id', 'title', 'year', 'author', 'location', 'as reuser', 'as source']
+    const rows = nodes.map(({ id, title, year, author, location, input, output }) => [id, title, year, author, location, input, output])
+
+    return [
+        columns,
+        ...rows,
+    ]
+}
+
+const NodeLists = ({ texts, reuses, sources, textsById }) => {
+    const [filters, setFilters] = useState({
+        id: '',
+        title: '',
+        location: '',
+        yearStart: 1,
+        yearEnd: 2000,
+        author: '',
+    }) as any
+    const { id, title, location, yearStart, yearEnd, author } = filters
+    const nodes = texts.filter(node => sources.has(node.id) && node.title.includes(title) && node.id.includes(id) && node.year <= yearEnd && node.year >= yearStart && node.location.includes(location) && node.author.includes(author))
+    const newSources = new Set(nodes.map(n => n.id))
+    const targetsForFilter = (Array.from((new Set(reuses.filter(({ source }) => newSources.has(source)).map(({ reuser }) => reuser))))).map((reuser: any) => textsById[reuser])
+    return (<div style={{ display: 'flex', flexDirection: 'row' }}>
+        <div style={{ flex: '1', marginRight: '10px' }}>
+            <h3 style={{ textAlign: 'center' }}>Source nodes list ({nodes.length} nodes), displaying up to 300, <CSVLink filename={'text-reuse-source-nodes.csv'} data={makeNodeCSV(nodes)}>download CSV</CSVLink></h3>
+            <NodeFilter filters={filters} setFilters={setFilters} />
+            <NodeList allNodes={nodes.splice(0, 300)} type={'source'} />
+        </div>
+        <div style={{ flex: '1' }}>
+            <h3 style={{ textAlign: 'center' }}>Reuser nodes list ({targetsForFilter.length} nodes), displaying up to 300, <CSVLink filename={'text-reuse-target-nodes.csv'} data={makeNodeCSV(targetsForFilter)}>download CSV</CSVLink></h3>
+            <NodeList allNodes={targetsForFilter.splice(0, 300)} type={'reuser'} />
+        </div>
     </div>)
 }
 
-const NodeLists = (texts, sources, targetsForFilter) => {
+const NodeList = ({ allNodes, type }) => {
+    return <Paper>
+        <Table aria-label='simple table'>
+            <TableHead>
+                <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell align='right'>Title</TableCell>
+                    <TableCell align='right'>Year</TableCell>
+                    <TableCell align='right'>Location</TableCell>
+                    <TableCell align='right'>Author</TableCell>
+                    <TableCell align='right'>As reuser</TableCell>
+                    <TableCell align='right'>As source</TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {allNodes.length < 500 && allNodes.map(t => (
+                    <TableRow key={t.id + type} >
+                        <TableCell component='th' scope='row'>
+                            {t.id}
+                        </TableCell>
+                        <TableCell align='right'>{t.title}</TableCell>
+                        <TableCell align='right'>{t.year}</TableCell>
+                        <TableCell align='right'>{t.location}</TableCell>
+                        <TableCell align='right'>{t.author}</TableCell>
+                        <TableCell align='right'>{t.input}</TableCell>
+                        <TableCell align='right'>{t.output}</TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
+    </Paper>
+}
 
-    return (<div style={{ display: 'flex', flexDirection: 'row' }}>
-                <div style={{ flex: '1', marginRight: '10px' }}>
-                    <Paper>
-                        <Table aria-label='simple table'>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>
-                                        <TextField
-                                            id='outlined-name'
-                                            key={'id'}
-                                            label={'Text id'}
-                                            margin='normal'
-                                            variant='outlined'
-                                        />
-                                    </TableCell>
-                                    <TableCell align='right'>
-                                        <TextField
-                                            id='outlined-name'
-                                            key={'title'}
-                                            label={'Text title'}
-                                            margin='normal'
-                                            variant='outlined'
-                                        />
-                                    </TableCell>
-                                    <TableCell align='right'>
-                                        <TextField
-                                            id='outlined-name'
-                                            key={'year'}
-                                            label={'Year'}
-                                            margin='normal'
-                                            variant='outlined'
-                                        />
-                                    </TableCell>
-                                    <TableCell align='right'>
-
-                                        <TextField
-                                            id='outlined-name'
-                                            key={'location'}
-                                            label={'Location'}
-                                            margin='normal'
-                                            variant='outlined'
-                                        />
-
-                                    </TableCell>
-                                    <TableCell align='right'>
-                                        <TextField
-                                            id='outlined-name'
-                                            key={'author'}
-                                            label={'Author'}
-                                            margin='normal'
-                                            variant='outlined'
-                                        />
-                                    </TableCell>
-                                    <TableCell align='right'>
-                                        Inbound
-                                    </TableCell>
-                                    <TableCell align='right'>
-                                        Outbound
-                                    </TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {texts.filter(t => sources.has(t.id)).map(t => (
-                                    <TableRow key={t.id}>
-                                        <TableCell component='th' scope='row'>
-                                            {t.id}
-                                        </TableCell>
-                                        <TableCell align='right'>{t.title}</TableCell>
-                                        <TableCell align='right'>{t.year}</TableCell>
-                                        <TableCell align='right'>{t.location}</TableCell>
-                                        <TableCell align='right'>{t.author}</TableCell>
-                                        <TableCell align='right'>{t.input}</TableCell>
-                                        <TableCell align='right'>{t.output}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Paper>
-                </div>
-                <div style={{ flex: '1' }}>
-                    <Paper>
-                        <Table aria-label='simple table'>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell align='right'>Title</TableCell>
-                                    <TableCell align='right'>Year</TableCell>
-                                    <TableCell align='right'>Location</TableCell>
-                                    <TableCell align='right'>Author</TableCell>
-                                    <TableCell align='right'>Input</TableCell>
-                                    <TableCell align='right'>Output</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {targetsForFilter.map(t => (
-                                    <TableRow key={t.id} >
-                                        <TableCell component='th' scope='row'>
-                                            {t.id}
-                                        </TableCell>
-                                        <TableCell align='right'>{t.title}</TableCell>
-                                        <TableCell align='right'>{t.year}</TableCell>
-                                        <TableCell align='right'>{t.location}</TableCell>
-                                        <TableCell align='right'>{t.author}</TableCell>
-                                        <TableCell align='right'>{t.input}</TableCell>
-                                        <TableCell align='right'>{t.output}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Paper>
-                </div>
-            </div>)
+const NodeFilter = ({ setFilters, filters }) => {
+    return <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '20px', marginRight: '20px' }}>
+        <TextField
+            id='outlined-name'
+            key={'id'}
+            label={'Text id'}
+            value={filters.id || ''}
+            onChange={(e) => setFilters({ ...filters, id: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+        <TextField
+            id='outlined-name'
+            key={'title'}
+            label={'Text title'}
+            value={filters.title || ''}
+            onChange={(e) => setFilters({ ...filters, title: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+        <TextField
+            id='outlined-name'
+            key={'location'}
+            label={'Location'}
+            value={filters.location || ''}
+            onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+        <TextField
+            id='outlined-name'
+            key={'yearStart'}
+            label={'Year begin'}
+            value={filters.yearStart || ''}
+            onChange={(e) => setFilters({ ...filters, yearStart: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+        <TextField
+            id='outlined-name'
+            key={'yearEnd'}
+            label={'Year end'}
+            value={filters.yearEnd || ''}
+            onChange={(e) => setFilters({ ...filters, yearEnd: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+        <TextField
+            id='outlined-name'
+            key={'author'}
+            label={'Author'}
+            value={filters.author || ''}
+            onChange={(e) => setFilters({ ...filters, author: e.target.value })}
+            margin='normal'
+            variant='outlined'
+            style={{ flex: 1 }}
+        />
+    </div>
 }
 
 export default GraphList
