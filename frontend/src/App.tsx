@@ -37,32 +37,34 @@ const HeaderTitle = styled.h5`
 const App: React.FC = () => {
   const [things, setThings] = useState([{}])
   return (
-    <ApolloProvider client={client}>
-      <Provider store={store}>
-        <Router>
-          <AppBar position='static' color='secondary'>
-            <HeaderTitle>
-              Text reuse application
-            </HeaderTitle>
-          </AppBar>
-          <Switch>
-            <Route path='/visualize'>
-              <GridWrapper>
+    <div style={{maxWidth: '100vw'}}>
+      <ApolloProvider client={client}>
+        <Provider store={store}>
+          <Router>
+            <AppBar position='static' color='secondary'>
+              <HeaderTitle>
+                Text reuse application
+              </HeaderTitle>
+            </AppBar>
+            <Switch>
+              <Route path='/visualize'>
+                <GridWrapper>
+                  <FilterView />
+                  <GraphList />
+                </GridWrapper>
+              </Route>
+              <Route path='/compare'>
+                <h1>Compare view Someday hopefully</h1>
+              </Route>
+              <Route path='/'>
                 <FilterView />
-                <GraphList />
-              </GridWrapper>
-            </Route>
-            <Route path='/compare'>
-              <h1>Compare view Someday hopefully</h1>
-            </Route>
-            <Route path='/'>
-              <FilterView />
-              <FilterView />
-            </Route>
-          </Switch>
-        </Router>
-      </Provider>
-    </ApolloProvider>
+                <FilterView />
+              </Route>
+            </Switch>
+          </Router>
+        </Provider>
+      </ApolloProvider>
+    </div>
   )
 }
 
