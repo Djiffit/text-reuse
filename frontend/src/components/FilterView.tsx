@@ -1,12 +1,13 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Paper, TextField, Divider, Checkbox, FormControlLabel, Button } from '@material-ui/core'
+import { Paper, TextField, Divider, Checkbox, FormControlLabel, Button, MenuItem, Select, InputLabel, FormControl } from '@material-ui/core'
 import { useSelector, useDispatch } from 'react-redux'
 import { FilterState, FilterKeys } from 'types/types'
 import { Link } from 'react-router-dom'
 import Visualizer from './Visualization'
 import { YEAR_FIELD, YEAR_START, YEAR_END } from 'util/constants'
 import NetworkFrame from 'semiotic/lib/NetworkFrame'
+import GraphList from './GraphList'
 
 const Wrapper = styled.div`
     margin: 30px;
@@ -129,6 +130,118 @@ const FilterView = () => {
     </Wrapper>
 }
 
+export const GraphFilters = ({ filters, setFilters }) => {
+
+    const YearPicker = (start: string, end: string) => {
+        return <YearWrap>
+            <TextField
+                id='outlined-name'
+                key={'yearStart'}
+                label={'Year begin'}
+                value={filters.yearStart || ''}
+                onChange={(e) => setFilters({ ...filters, yearStart: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ flex: 3 }}
+            />
+            <Dash>
+                -
+            </Dash>
+            <TextField
+                id='outlined-name'
+                key={'yearEnd'}
+                label={'Year end'}
+                value={filters.yearEnd || ''}
+                onChange={(e) => setFilters({ ...filters, yearEnd: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ flex: 3 }}
+            />
+        </YearWrap>
+    }
+
+
+    return <Wrapper>
+        <Paper elevation={5} style={{ padding: '20px 50px', minHeight: '90vh' }}>
+
+            <Title>
+                Restrict source nodes from query
+            </Title>
+
+            <Divider style={{ marginBottom: '20px' }} />
+            <TextField
+                id='outlined-name'
+                key={'id'}
+                label={'Text id'}
+                value={filters.id || ''}
+                onChange={(e) => setFilters({ ...filters, id: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ width: '100%' }}
+            />
+            <TextField
+                id='outlined-name'
+                key={'title'}
+                label={'Text title'}
+                value={filters.title || ''}
+                onChange={(e) => setFilters({ ...filters, title: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ width: '100%' }}
+            />
+
+            {YearPicker(filters.yearStart, filters.yearEnd)}
+
+            <TextField
+                id='outlined-name'
+                key={'location'}
+                label={'Location'}
+                value={filters.location || ''}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ width: '100%' }}
+            />
+            <TextField
+                id='outlined-name'
+                key={'author'}
+                label={'Author'}
+                value={filters.author || ''}
+                onChange={(e) => setFilters({ ...filters, author: e.target.value })}
+                margin='normal'
+                variant='outlined'
+                style={{ width: '100%' }}
+            />
+            <FormControl variant='outlined' style={{ width: '100%', marginTop: '15px' }}>
+                <InputLabel id='demo-simple-select-outlined-label'>Grouping field</InputLabel>
+                <Select
+                    labelId='demo-simple-select-outlined-label'
+                    id='demo-simple-select-outlined'
+                    value={filters.key || 'id'}
+                    onChange={(e) => setFilters({ ...filters, key: e.target.value })}
+                >
+                    <MenuItem value={'id'}>Text ID</MenuItem>
+                    <MenuItem value={'author'}>Author</MenuItem>
+                    <MenuItem value={'location'}>Location</MenuItem>
+                    <MenuItem value={'year'}>Year</MenuItem>
+                </Select>
+            </FormControl>
+            <CheckBoxGroup>
+                <FormControlLabel
+                    control={
+                        <Checkbox value={filters.external} onChange={(e) => setFilters({ ...filters, hideSubFiltered: e.target.checked })} />
+                    }
+                    label='Hide connections from sources outside this filter'
+                />
+            </CheckBoxGroup>
+            {<Link to={'/'}>
+                <Button style={{ width: '100%', marginTop: '500px' }} variant='contained' color='secondary'>
+                    {'Back to home'}
+                </Button>
+            </Link>}
+        </Paper>
+    </Wrapper>
+}
+
+
 export default FilterView
-
-

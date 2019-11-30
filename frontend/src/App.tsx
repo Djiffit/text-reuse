@@ -18,11 +18,6 @@ const client = new ApolloClient({
 
 const store = createStore(filterReducer)
 
-const GridWrapper = styled.div`
-  display: grid;
-  grid-gap: 10px;
-  grid-template-columns: 1fr 3fr;
-`
 
 const Header = styled.div`
   grid-column: 1 / -1;
@@ -37,7 +32,7 @@ const HeaderTitle = styled.h5`
 const App: React.FC = () => {
   const [things, setThings] = useState([{}])
   return (
-    <div style={{maxWidth: '100vw'}}>
+    <div style={{ maxWidth: '100vw' }}>
       <ApolloProvider client={client}>
         <Provider store={store}>
           <Router>
@@ -48,16 +43,12 @@ const App: React.FC = () => {
             </AppBar>
             <Switch>
               <Route path='/visualize'>
-                <GridWrapper>
-                  <FilterView />
-                  <GraphList />
-                </GridWrapper>
+                <GraphList />
               </Route>
               <Route path='/compare'>
                 <h1>Compare view Someday hopefully</h1>
               </Route>
               <Route path='/'>
-                <FilterView />
                 <FilterView />
               </Route>
             </Switch>

@@ -16,7 +16,34 @@ import { TextField, Tab, Tabs } from '@material-ui/core'
 import edges from '../dummyData/edges'
 import nodes from '../dummyData/nodes'
 import ResponsiveOrdinalFrame from 'semiotic/lib/ResponsiveOrdinalFrame'
+import { GraphFilters } from './FilterView'
+import styled from 'styled-components'
 
+
+const GridWrapper = styled.div`
+  display: grid;
+  grid-gap: 10px;
+  grid-template-columns: 1fr 3fr;
+`
+const GraphWrapper = () => {
+    const [filters, setFilters] = useState({
+        id: '',
+        title: '',
+        location: '',
+        yearStart: 1,
+        yearEnd: 2000,
+        author: '',
+        key: 'id',
+        hideSubFiltered: false,
+    }) as any
+
+    console.log(filters)
+
+    return (<GridWrapper>
+        <GraphFilters filters={filters} setFilters={setFilters} />
+        <GraphList graphFilters={filters} />
+    </GridWrapper>)
+}
 
 const mapToQueryFilters = (f: FilterState) => {
     const filters = {
@@ -43,10 +70,15 @@ const makeCSV = (reuses, texts) => {
     ]
 }
 
-const GraphList = () => {
+const filterNodes = (filters, nodes) => {
+    const { title, id, yearEnd, yearStart, location, author } = filters
+    return nodes.filter(node => node.title.includes(title) && node.id.includes(id) && node.year <= yearEnd && node.year >= yearStart && node.location.includes(location) && node.author.includes(author))
+}
+
+const GraphList = ({ graphFilters }) => {
     const [active, setActive] = useState(new Set([]))
     const [activeNode, setActiveNode] = useState({}) as any
-    const [value, setValue] = useState(1)
+    const [value, setValue] = useState(0)
     const filters = useSelector((state: FilterState) => state)
     // const { loading, error, data } = useQuery(GET_CONNECTIONS, {
     //     variables: {
@@ -68,8 +100,8 @@ const GraphList = () => {
     // }
 
     // const { reuses, texts } = data.reuses
-    const reuses = edges
-    const texts = nodes
+    let reuses = edges
+    let texts = nodes
 
     const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
         setValue(newValue)
@@ -83,21 +115,17 @@ const GraphList = () => {
         }
     }
 
-
-
-    const sources = new Set([]) as any
-
-    reuses.forEach(r => sources.add(r.source))
-
     const textsById = {}
     texts.forEach(t => textsById[t.id] = t)
 
+    const originalSources = Array.from(new Set(reuses.map(r => r.source)))
+    const sources = new Set(filterNodes(graphFilters, originalSources.map((id: any) => textsById[id])).map(n => n.id))
+    const sourceByKey = new Set(Array.from(sources).map((k: any) => textsById[k][graphFilters.key]))
+    if (graphFilters.hideSubFiltered) {
+        reuses = reuses.filter(({ source }) => sources.has(source))
+    }
+
     const targetsForFilter = (Array.from((new Set(reuses.filter(({ source }) => sources.has(source)).map(({ reuser }) => reuser))))).map((reuser: any) => textsById[reuser])
-
-
-    // const texts_by_id = {}
-
-    // texts.forEach(t => texts_by_id[t.id] = t)
 
     reuses.forEach(({ source, reuser, count }) => {
         try {
@@ -110,6 +138,9 @@ const GraphList = () => {
             console.log(e, source, reuser)
         }
     })
+
+    texts = texts.filter(t => t.input + t.output > 0)
+    console.log(texts.length, texts)
 
     const filteredTexts = new Set(Object.values(textsById).filter((t: any) => {
         return (t.output + t.input) > 200
@@ -141,7 +172,7 @@ const GraphList = () => {
                     {activeNode.location && <p style={{ margin: 0 }}><b>Location:</b> {activeNode.location}</p>}
                     {activeNode.year && <p style={{ margin: 0 }}><b>Year:</b> {activeNode.year}</p>}
                 </Paper>}
-                <GraphVis sources={sources} setActiveNode={setActiveNode} nodesById={textsById} texts={texts} reuses={reuses} />
+                <GraphVis idKey={graphFilters.key} sources={graphFilters.key === 'id' ? sources : sourceByKey} setActiveNode={setActiveNode} nodesById={textsById} texts={texts} reuses={reuses} />
             </div>}
             {<div style={{ display: value !== 1 ? 'none' : 'inherit' }}><Visualizations nodes={texts} filteredTexts={filteredTexts} edges={reuses} /></div>}
             {<div style={{ display: value !== 2 ? 'none' : 'inherit' }}><NodeLists reuses={reuses} sources={sources} texts={texts} textsById={textsById} /></div>}
@@ -149,32 +180,41 @@ const GraphList = () => {
     </div >
 }
 
-const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, key = 'id' }) => {
-    const [frozen, setFrozen] = useState(15000)
-    setTimeout(() => setFrozen(0), 9000)
-    const nodearr = key === 'id' ? texts : Array.from(new Set(texts.map(t => t[key]))).map(k => [k].reduce((p: any, c: any) => {
-        p[key] = c
+const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) => {
+    const [frozen, setFrozen] = useState(60000)
+    if (idKey !== 'id' && frozen !== 60000) {
+        setFrozen(60000)
+    }
+    const nodearr = idKey === 'id' ? texts : Array.from(new Set(texts.map(t => t[idKey]))).map(k => [k].reduce((p: any, c: any) => {
+        p[idKey] = c
         return p
     }, {}))
+
+    console.log(idKey)
     return (
         <div>
             <ForceGraph2D
-                graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][key], target: nodesById[reuser][key], value: count })) }}
+                graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][idKey], target: nodesById[reuser][idKey], value: count })).filter(({ source, target }) => source !== target) }}
                 width={window.innerWidth * 0.7}
-                nodeId={key}
-                onNodeClick={(node) => setActiveNode(node)}
+                nodeId={idKey}
+                onNodeClick={(node) => {
+                    if (idKey === 'id') {
+                        setFrozen(0)
+                    }
+                    setActiveNode(node)
+                }}
                 height={window.innerHeight * 0.8}
                 nodeAutoColorBy='group'
                 linkWidth={((d) => Math.log(d.value) / 2)}
                 enableNodeDrag={false}
                 cooldownTime={frozen}
                 nodeCanvasObject={(node, ctx, globalScale) => {
-                    const label = node[key]
+                    const label = node[idKey]
                     const fontSize = 11 / globalScale
                     ctx.font = `${fontSize}px Sans-Serif`
                     ctx.textAlign = 'center'
                     ctx.textBaseline = 'middle'
-                    if (sources.has(node.id)) {
+                    if (sources.has(node[idKey])) {
                         ctx.fillStyle = 'red'
                     } else {
                         ctx.fillStyle = 'blue'
@@ -452,4 +492,4 @@ const NodeFilter = ({ setFilters, filters }) => {
     </div>
 }
 
-export default GraphList
+export default GraphWrapper
