@@ -169,8 +169,8 @@ export const GraphFilters = ({ filters, setFilters }) => {
 
 
     return <Wrapper>
-        <div style={{height: '70vh', position: 'fixed', width: '400px' }}>
-            <Paper elevation={5} style={{ padding: '20px 50px', height: '70vh' }}>
+        <div style={{height: '90vh', position: 'fixed', width: '400px', overflowY: 'scroll' }}>
+            <Paper elevation={5} style={{ padding: '20px 50px', margin: '5px' }}>
 
                 <Title>
                     Restrict source nodes from query
@@ -237,11 +237,88 @@ export const GraphFilters = ({ filters, setFilters }) => {
                 <CheckBoxGroup>
                     <FormControlLabel
                         control={
-                            <Checkbox value={filters.external} onChange={(e) => setFilters({ ...filters, hideSubFiltered: e.target.checked })} />
+                            <Checkbox checked={filters.hideSubFiltered} onChange={(e) => setFilters({ ...filters, hideSubFiltered: e.target.checked })} />
                         }
                         label='Hide connections from sources outside this filter'
                     />
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox checked={filters.sameAuthor} onChange={(e) => setFilters({ ...filters, sameAuthor: e.target.checked })} />
+                        }
+                        label='Hide connections between same authors'
+                    />
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox checked={filters.sameYear} onChange={(e) => setFilters({ ...filters, sameYear: e.target.checked })} />
+                        }
+                        label='Hide connections between same year'
+                    />
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox checked={filters.sameLocation} onChange={(e) => setFilters({ ...filters, sameLocation: e.target.checked })} />
+                        }
+                        label='Hide connections between same locations'
+                    />
+
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox checked={filters.sourceNodes} onChange={(e) => setFilters({ ...filters, sourceNodes: e.target.checked })} />
+                        }
+                        label='Hide connections between source nodes'
+                    />
                 </CheckBoxGroup>
+                <FormControl variant='outlined' style={{ width: '100%', marginTop: '15px' }}>
+                    <InputLabel id='demo-simple-select-outlined-label'>Barchart connection types</InputLabel>
+                    <Select
+                        labelId='demo-simple-select-outlined-label'
+                        id='demo-simple-select-outlined'
+                        value={filters.chartType || 'both'}
+                        onChange={(e) => setFilters({ ...filters, chartType: e.target.value })}
+                    >
+                        <MenuItem value={'both'}>Both</MenuItem>
+                        <MenuItem value={'reuser'}>As reuser</MenuItem>
+                        <MenuItem value={'source'}>As source</MenuItem>
+                    </Select>
+                </FormControl>
+                <TextField
+                    id='outlined-name'
+                    key={'barAuthor'}
+                    label={'Bar chart author filter'}
+                    value={filters.barAuthorFilter || ''}
+                    onChange={(e) => setFilters({ ...filters, barAuthorFilter: e.target.value })}
+                    margin='normal'
+                    variant='outlined'
+                    style={{ width: '100%' }}
+                />
+                <YearWrap>
+                    <TextField
+                        id='outlined-name'
+                        key={'barChartEntryStart'}
+                        label={'Bar chart entry start index'}
+                        value={filters.barChartEntryStart || 0}
+                        onChange={(e) => setFilters({ ...filters, barChartEntryStart: e.target.value })}
+                        margin='normal'
+                        variant='outlined'
+                        style={{ flex: 3 }}
+                    />
+                    <Dash>
+                        -
+                    </Dash>
+                    <TextField
+                        id='outlined-name'
+                        key={'chartEnd'}
+                        label={'Bar chart entry end index'}
+                        value={filters.barChartEntryEnd || 0}
+                        onChange={(e) => setFilters({ ...filters, barChartEntryEnd: e.target.value })}
+                        margin='normal'
+                        variant='outlined'
+                        style={{ flex: 3 }}
+                    />
+                </ YearWrap>
                 {<Link to={'/'}>
                     <Button style={{ width: '100%', marginTop: '100px' }} variant='contained' color='secondary'>
                         {'Back to home'}
