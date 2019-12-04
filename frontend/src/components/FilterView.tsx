@@ -11,7 +11,8 @@ import GraphList from './GraphList'
 
 const Wrapper = styled.div`
     margin: 30px;
-    min-width: 310px;
+    width: 400px;
+    height: 60vh;
 `
 const Title = styled.h3`
     font-size: 20px;
@@ -32,6 +33,12 @@ const Dash = styled.p`
     align-self: center;
     font-size: 50px;
     margin: 0;
+`
+
+const Floater = styled.div`
+    position: fixed;
+    width: 300px;
+
 `
 
 const FilterView = () => {
@@ -97,36 +104,36 @@ const FilterView = () => {
 
 
     return <Wrapper>
-        <Paper elevation={5} style={{ padding: '20px 50px', minHeight: '90vh' }}>
+            <Paper elevation={5} style={{ padding: '20px 50px'}}>
 
-            <Title>
-                Filters
-            </Title>
+                <Title>
+                    Filters
+                </Title>
 
-            <Divider style={{ marginBottom: '20px' }} />
+                <Divider style={{ marginBottom: '20px' }} />
 
-            {Object.entries(filters).filter(arr => !arr[0].includes('year')).map(arr => createInput(arr))}
-            {YearPicker(filters.yearStart, filters.yearEnd)}
-            <CheckBoxGroup>
-                <FormControlLabel
-                    control={
-                        <Checkbox value={filters.external} onChange={(e) => updateValue('external', e.target.checked)} disabled={visualizing} />
-                    }
-                    label='External only'
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox value={filters.internal} onChange={(e) => updateValue('internal', e.target.checked)} disabled={visualizing} />
-                    }
-                    label='Internal only'
-                />
-            </CheckBoxGroup>
-            {<Link to={visualizing ? '/' : '/visualize'}>
-                <Button style={{ width: '100%' }} variant='contained' color='secondary'>
-                    {visualizing ? 'Back' : 'Search'}
-                </Button>
-            </Link>}
-        </Paper>
+                {Object.entries(filters).filter(arr => !arr[0].includes('year')).map(arr => createInput(arr))}
+                {YearPicker(filters.yearStart, filters.yearEnd)}
+                <CheckBoxGroup>
+                    <FormControlLabel
+                        control={
+                            <Checkbox value={filters.external} onChange={(e) => updateValue('external', e.target.checked)} disabled={visualizing} />
+                        }
+                        label='External only'
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox value={filters.internal} onChange={(e) => updateValue('internal', e.target.checked)} disabled={visualizing} />
+                        }
+                        label='Internal only'
+                    />
+                </CheckBoxGroup>
+                {<Link to={visualizing ? '/' : '/visualize'}>
+                    <Button style={{ width: '100%' }} variant='contained' color='secondary'>
+                        {visualizing ? 'Back' : 'Search'}
+                    </Button>
+                </Link>}
+            </Paper>
     </Wrapper>
 }
 
@@ -162,84 +169,86 @@ export const GraphFilters = ({ filters, setFilters }) => {
 
 
     return <Wrapper>
-        <Paper elevation={5} style={{ padding: '20px 50px', minHeight: '90vh' }}>
+        <div style={{height: '70vh', position: 'fixed', width: '400px' }}>
+            <Paper elevation={5} style={{ padding: '20px 50px', height: '70vh' }}>
 
-            <Title>
-                Restrict source nodes from query
-            </Title>
+                <Title>
+                    Restrict source nodes from query
+                </Title>
 
-            <Divider style={{ marginBottom: '20px' }} />
-            <TextField
-                id='outlined-name'
-                key={'id'}
-                label={'Text id'}
-                value={filters.id || ''}
-                onChange={(e) => setFilters({ ...filters, id: e.target.value })}
-                margin='normal'
-                variant='outlined'
-                style={{ width: '100%' }}
-            />
-            <TextField
-                id='outlined-name'
-                key={'title'}
-                label={'Text title'}
-                value={filters.title || ''}
-                onChange={(e) => setFilters({ ...filters, title: e.target.value })}
-                margin='normal'
-                variant='outlined'
-                style={{ width: '100%' }}
-            />
-
-            {YearPicker(filters.yearStart, filters.yearEnd)}
-
-            <TextField
-                id='outlined-name'
-                key={'location'}
-                label={'Location'}
-                value={filters.location || ''}
-                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                margin='normal'
-                variant='outlined'
-                style={{ width: '100%' }}
-            />
-            <TextField
-                id='outlined-name'
-                key={'author'}
-                label={'Author'}
-                value={filters.author || ''}
-                onChange={(e) => setFilters({ ...filters, author: e.target.value })}
-                margin='normal'
-                variant='outlined'
-                style={{ width: '100%' }}
-            />
-            <FormControl variant='outlined' style={{ width: '100%', marginTop: '15px' }}>
-                <InputLabel id='demo-simple-select-outlined-label'>Grouping field</InputLabel>
-                <Select
-                    labelId='demo-simple-select-outlined-label'
-                    id='demo-simple-select-outlined'
-                    value={filters.key || 'id'}
-                    onChange={(e) => setFilters({ ...filters, key: e.target.value })}
-                >
-                    <MenuItem value={'id'}>Text ID</MenuItem>
-                    <MenuItem value={'author'}>Author</MenuItem>
-                    <MenuItem value={'location'}>Location</MenuItem>
-                    <MenuItem value={'year'}>Year</MenuItem>
-                </Select>
-            </FormControl>
-            <CheckBoxGroup>
-                <FormControlLabel
-                    control={
-                        <Checkbox value={filters.external} onChange={(e) => setFilters({ ...filters, hideSubFiltered: e.target.checked })} />
-                    }
-                    label='Hide connections from sources outside this filter'
+                <Divider style={{ marginBottom: '20px' }} />
+                <TextField
+                    id='outlined-name'
+                    key={'id'}
+                    label={'Text id'}
+                    value={filters.id || ''}
+                    onChange={(e) => setFilters({ ...filters, id: e.target.value })}
+                    margin='normal'
+                    variant='outlined'
+                    style={{ width: '100%' }}
                 />
-            </CheckBoxGroup>
-            {<Link to={'/'}>
-                <Button style={{ width: '100%', marginTop: '500px' }} variant='contained' color='secondary'>
-                    {'Back to home'}
-                </Button>
-            </Link>}
-        </Paper>
+                <TextField
+                    id='outlined-name'
+                    key={'title'}
+                    label={'Text title'}
+                    value={filters.title || ''}
+                    onChange={(e) => setFilters({ ...filters, title: e.target.value })}
+                    margin='normal'
+                    variant='outlined'
+                    style={{ width: '100%' }}
+                />
+
+                {YearPicker(filters.yearStart, filters.yearEnd)}
+
+                <TextField
+                    id='outlined-name'
+                    key={'location'}
+                    label={'Location'}
+                    value={filters.location || ''}
+                    onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                    margin='normal'
+                    variant='outlined'
+                    style={{ width: '100%' }}
+                />
+                <TextField
+                    id='outlined-name'
+                    key={'author'}
+                    label={'Author'}
+                    value={filters.author || ''}
+                    onChange={(e) => setFilters({ ...filters, author: e.target.value })}
+                    margin='normal'
+                    variant='outlined'
+                    style={{ width: '100%' }}
+                />
+                <FormControl variant='outlined' style={{ width: '100%', marginTop: '15px' }}>
+                    <InputLabel id='demo-simple-select-outlined-label'>Grouping field</InputLabel>
+                    <Select
+                        labelId='demo-simple-select-outlined-label'
+                        id='demo-simple-select-outlined'
+                        value={filters.key || 'id'}
+                        onChange={(e) => setFilters({ ...filters, key: e.target.value })}
+                    >
+                        <MenuItem value={'id'}>Text ID</MenuItem>
+                        <MenuItem value={'author'}>Author</MenuItem>
+                        <MenuItem value={'location'}>Location</MenuItem>
+                        <MenuItem value={'year'}>Year</MenuItem>
+                    </Select>
+                </FormControl>
+                <CheckBoxGroup>
+                    <FormControlLabel
+                        control={
+                            <Checkbox value={filters.external} onChange={(e) => setFilters({ ...filters, hideSubFiltered: e.target.checked })} />
+                        }
+                        label='Hide connections from sources outside this filter'
+                    />
+                </CheckBoxGroup>
+                {<Link to={'/'}>
+                    <Button style={{ width: '100%', marginTop: '100px' }} variant='contained' color='secondary'>
+                        {'Back to home'}
+                    </Button>
+                </Link>}
+            </Paper>
+        </div>
     </Wrapper>
 }
 

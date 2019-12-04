@@ -12,7 +12,7 @@ import TableCell from '@material-ui/core/TableCell'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Paper from '@material-ui/core/Paper'
-import { TextField, Tab, Tabs } from '@material-ui/core'
+import { TextField, Tab, Tabs, Button } from '@material-ui/core'
 import edges from '../dummyData/edges'
 import nodes from '../dummyData/nodes'
 import ResponsiveOrdinalFrame from 'semiotic/lib/ResponsiveOrdinalFrame'
@@ -21,9 +21,18 @@ import styled from 'styled-components'
 
 
 const GridWrapper = styled.div`
-  display: grid;
-  grid-gap: 10px;
-  grid-template-columns: 1fr 3fr;
+  display: flex;
+  flex-direction: row;
+`
+
+const ToolTip = styled.div`
+    background: white;
+    position: relative;
+    border: 1px solid #ddd;
+    color: black;
+    padding: 10px;
+    z-index: 100;
+    min-width: 120px;
 `
 const GraphWrapper = () => {
     const [filters, setFilters] = useState({
@@ -37,17 +46,24 @@ const GraphWrapper = () => {
         hideSubFiltered: false,
     }) as any
 
+    const [sideBar, toggleBar] = useState(false)
+
     console.log(filters)
 
     return (<GridWrapper>
-        <GraphFilters filters={filters} setFilters={setFilters} />
-        <GraphList graphFilters={filters} />
+        {sideBar && <div style={{flex: 1}}><GraphFilters filters={filters} setFilters={setFilters} /></div>}
+        <div style={{flex: 4}}>
+            <GraphList graphFilters={filters} />
+            <div style={{position: 'fixed', left: '20px', bottom: '30px'}}>
+                <Button variant='contained' color='secondary' onClick={() => toggleBar(!sideBar)}>Toggle</Button>
+            </div>
+        </div>
     </GridWrapper>)
 }
 
 const mapToQueryFilters = (f: FilterState) => {
     const filters = {
-        title: f.textTitle || 'Death',
+        title: f.textTitle,
         author: f.authorTitle,
         yearStart: f.yearStart && Number(f.yearStart) || 0,
         yearEnd: f.yearEnd && Number(f.yearEnd) || 2000,
@@ -78,7 +94,7 @@ const filterNodes = (filters, nodes) => {
 const GraphList = ({ graphFilters }) => {
     const [active, setActive] = useState(new Set([]))
     const [activeNode, setActiveNode] = useState({}) as any
-    const [value, setValue] = useState(0)
+    const [value, setValue] = useState(1)
     const filters = useSelector((state: FilterState) => state)
     // const { loading, error, data } = useQuery(GET_CONNECTIONS, {
     //     variables: {
@@ -99,7 +115,7 @@ const GraphList = ({ graphFilters }) => {
     //     </div>
     // }
 
-    // const { reuses, texts } = data.reuses
+    // let { reuses, texts } = data.reuses
     let reuses = edges
     let texts = nodes
 
@@ -126,6 +142,7 @@ const GraphList = ({ graphFilters }) => {
     }
 
     const targetsForFilter = (Array.from((new Set(reuses.filter(({ source }) => sources.has(source)).map(({ reuser }) => reuser))))).map((reuser: any) => textsById[reuser])
+    const allNodes = new Set([]) as any
 
     reuses.forEach(({ source, reuser, count }) => {
         try {
@@ -134,24 +151,22 @@ const GraphList = ({ graphFilters }) => {
 
             textsById[source].input = textsById[source].input || 0
             textsById[reuser].output = textsById[reuser].output || 0
+            allNodes.add(source)
+            allNodes.add(reuser)
         } catch (e) {
             console.log(e, source, reuser)
         }
     })
 
-    texts = texts.filter(t => t.input + t.output > 0)
+    texts = texts.filter((t: any) => allNodes.has(t.id))
     console.log(texts.length, texts)
-
-    const filteredTexts = new Set(Object.values(textsById).filter((t: any) => {
-        return (t.output + t.input) > 200
-    }).map((t: any) => ({ id: t.id, count: t.output + t.input })).sort((a, b) => a.count > b.count ? 1 : -1).splice(0, 100).map((t) => t.id))
 
 
     // console.log(Object.values(texts_by_id), texts_by_id, texts)
 
     return <div>
         <CSVLink filename={'text-reuse-export.csv'} data={makeCSV(reuses, texts)}>Download data as CSV</CSVLink>
-        <Paper style={{ marginRight: '50px', maxWidth: '70vw' }}>
+        <Paper style={{ marginRight: '50px', marginLeft: '30px', maxWidth: '95%' }}>
             <Tabs
                 value={value}
                 onChange={handleChange}
@@ -174,16 +189,16 @@ const GraphList = ({ graphFilters }) => {
                 </Paper>}
                 <GraphVis idKey={graphFilters.key} sources={graphFilters.key === 'id' ? sources : sourceByKey} setActiveNode={setActiveNode} nodesById={textsById} texts={texts} reuses={reuses} />
             </div>}
-            {<div style={{ display: value !== 1 ? 'none' : 'inherit' }}><Visualizations nodes={texts} filteredTexts={filteredTexts} edges={reuses} /></div>}
+            {<div style={{ display: value !== 1 ? 'none' : 'inherit' }}><Visualizations nodes={texts} edges={reuses} /></div>}
             {<div style={{ display: value !== 2 ? 'none' : 'inherit' }}><NodeLists reuses={reuses} sources={sources} texts={texts} textsById={textsById} /></div>}
         </Paper>
     </div >
 }
 
 const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) => {
-    const [frozen, setFrozen] = useState(60000)
-    if (idKey !== 'id' && frozen !== 60000) {
-        setFrozen(60000)
+    const [frozen, setFrozen] = useState(10000)
+    if (idKey !== 'id' && frozen !== 10000) {
+        setFrozen(10000)
     }
     const nodearr = idKey === 'id' ? texts : Array.from(new Set(texts.map(t => t[idKey]))).map(k => [k].reduce((p: any, c: any) => {
         p[idKey] = c
@@ -193,10 +208,18 @@ const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) =
     console.log(idKey)
     return (
         <div>
-            <ForceGraph2D
+            {/* <ForceGraph2D
                 graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][idKey], target: nodesById[reuser][idKey], value: count })).filter(({ source, target }) => source !== target) }}
                 width={window.innerWidth * 0.7}
                 nodeId={idKey}
+                onNodeHover={(node) => {
+                    if (idKey === 'id') {
+                        setFrozen(0)
+                    }
+                    if (idKey === 'id' && node) {
+                        setActiveNode(node || {})
+                    }
+                }}
                 onNodeClick={(node) => {
                     if (idKey === 'id') {
                         setFrozen(0)
@@ -221,14 +244,95 @@ const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) =
                     }
                     ctx.fillText(label, node.x, node.y)
                 }}
-            />
+            /> */}
         </div >
     )
 }
 
-const Visualizations = ({ nodes, edges, filteredTexts }) => {
+const BarGraph = ({data, title, label}) => {
+    const chartProps = {
+        data,
+        size: [500, 900],
+        type: 'bar',
+        projection: 'horizontal',
+        oAccessor: 'name',
+        rAccessor: 'connections',
+        title,
+        axes: [{
+            orient: 'bottom',
+            label,
+            ticks: 10,
+        }],
+        style: () => {
+            const letters = '0123456789ABCDEF'
+            let fill = '#'
+            for (let i = 0; i < 6; i++) {
+              fill += letters[Math.floor(Math.random() * 16)]
+            }
+            return { fill, stroke: 'white' }
+        },
+        margin: {left: 200, right: 25, top: 50, bottom: 50},
+        tooltipContent: (d) => {
+            return <ToolTip>
+              <p>watatatatatattat</p>
+              <p onClick={console.log('we are active', d) as any}>wtatwatwatawtwa</p>
 
-    const authors = nodes.map(n => n.author.split('|||'))// .reduce((e, s) => ([...e, s.name]), []))
+            </ToolTip>
+        },
+        renderMode: 'sketchy',
+        oPadding: 3,
+        pixelColumnWidth: 18,
+        hoverAnnotation: true,
+        oLabel: (d) => <text style={{transform: 'translate(-190px, 3px)', fontSize: '11px'}}>
+            {d.substring(0, 35)}
+        </text>,
+        rLabel: true,
+    }
+    return <ResponsiveOrdinalFrame
+                {...chartProps}
+                responsiveWidth={true}
+            />
+}
+
+const Visualizations = ({ nodes, edges }) => {
+
+    const authorsById = {} as any
+    const yearsById = {} as any
+    const locationsById = {} as any
+    const textsById = {} as any
+
+    console.log(nodes)
+
+    nodes.forEach(n => {
+        authorsById[n.author] = authorsById[n.author] || {}
+        locationsById[n.location] = locationsById[n.location] || {}
+        yearsById[n.year] = yearsById[n.year] || {}
+        textsById[n.id] = textsById[n.id] || {}
+
+        locationsById[n.location].asSource = (locationsById[n.location].asSource || 0) + n.output
+        authorsById[n.author].asSource = (authorsById[n.author].asSource || 0) + n.output
+        yearsById[n.year].asSource = (yearsById[n.year].asSource || 0) + n.output
+        textsById[n.id].asSource = (textsById[n.id].asSource || 0) + n.output
+
+        locationsById[n.location].asReuser = (locationsById[n.location].asReuser || 0) + n.input
+        authorsById[n.author].asReuser = (authorsById[n.author].asReuser || 0) + n.input
+        yearsById[n.year].asReuser = (yearsById[n.year].asReuser || 0) + n.input
+        textsById[n.id].asReuser = (textsById[n.id].asReuser || 0) + n.input
+    })
+
+    console.log(locationsById)
+
+
+
+
+
+    const filteredTexts = new Set(Object.values(textsById).filter((t: any) => {
+        return (t.output + t.input) > 200
+    }).map((t: any) => ({ id: t.id, count: t.output + t.input })).sort((a, b) => a.count > b.count ? 1 : -1).splice(0, 100).map((t) => t.id))
+
+    console.log(filteredTexts)
+
+    const authors = nodes.map(n => n.author.split('|||'))
     const authorCounts = {}
 
     const years = nodes.map(n => n.year) // .reduce((e, s) => ([...e, s.name]), [])))
@@ -258,23 +362,7 @@ const Visualizations = ({ nodes, edges, filteredTexts }) => {
     const countsY = Object.entries(yearCounts).map((count) => ({ year: count[0], titles: count[1] })).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
     const countsL = Object.entries(locCounts).map((count) => ({ location: count[0], titles: count[1] })).sort((a: any, b: any) => a.titles > b.titles ? -1 : 1)
 
-
-    const framePropsA = {
-        data: counts.slice(0, 20),
-        size: [1000, 1000],
-        type: 'bar',
-        projection: 'horizontal',
-        oAccessor: 'name',
-        rAccessor: 'texts',
-        title: 'Most Common Authors',
-        axes: [{
-            orient: 'left',
-            label: 'Number of Titles',
-        }],
-        style: { fill: '#ac58e5', stroke: 'white' },
-        hoverAnnotation: true,
-        oLabel: false,
-    }
+    console.log(locationsById['London'], 'hello')
 
     const framePropsL = {
         data: countsL.slice(0, 10),
@@ -287,13 +375,16 @@ const Visualizations = ({ nodes, edges, filteredTexts }) => {
             orient: 'left',
             label: 'Number of Titles',
         }],
-
         projection: 'horizontal',
 
         style: { fill: '#ac58e5', stroke: 'white' },
         hoverAnnotation: true,
         horizontal: true,
-        oLabel: true,
+        oLabel: {
+            label: true,
+            orient: 'center',
+            padding: -5,
+        },
     }
 
     const framePropsY = {
@@ -340,20 +431,16 @@ const Visualizations = ({ nodes, edges, filteredTexts }) => {
         nodeLabels: true,
     }
     return (
-        <div style={{ marginLeft: '100px' }}>
+        <div >
+            <BarGraph title={`Author connections (${Object.keys(authorsById).length} unique authors)`} label={'Number of connections'} data={Object.entries(authorsById)
+                    .map((arr: any) => ({connections: arr[1].asReuser + arr[1].asSource, name: arr[0]})).sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(0, 50)}/>
+            
+            <BarGraph title={`Year connections (${Object.keys(yearsById).length} unique years)`} label={'Number of connections'} data={Object.entries(yearsById)
+                    .map((arr: any) => ({connections: arr[1].asReuser + arr[1].asSource, name: arr[0]})).sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(0, 50)}/>
+            
+            <BarGraph title={`Location connections (${Object.keys(yearsById).length} unique locations)`} label={'Number of connections'} data={Object.entries(locationsById)
+                    .map((arr: any) => ({connections: arr[1].asReuser + arr[1].asSource, name: arr[0]})).sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(0, 50)}/>
             <NetworkFrame {...frameProps} />
-            <ResponsiveOrdinalFrame
-                {...framePropsA}
-                responsiveWidth={true}
-            />
-            <ResponsiveOrdinalFrame
-                {...framePropsY}
-                responsiveWidth={true}
-            />
-            <ResponsiveOrdinalFrame
-                {...framePropsL}
-                responsiveWidth={true}
-            />
         </div>)
 }
 
