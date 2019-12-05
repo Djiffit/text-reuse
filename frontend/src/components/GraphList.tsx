@@ -54,8 +54,22 @@ const GraphWrapper = () => {
         barChartEntryEnd: 50,
     }) as any
 
+    const [secret, setSecret] = useState('')
+
     const [sideBar, toggleBar] = useState(true)
 
+    if (secret !== 'unicorn') {
+        return  <TextField
+        id='outlined-name'
+        key={'secret'}
+        label={'Secret'}
+        value={secret || ''}
+        onChange={(e) => setSecret(e.target.value)}
+        margin='normal'
+        variant='outlined'
+        style={{ width: '100%' }}
+    />
+    }
     return (<GridWrapper>
         {sideBar && <div style={{flex: 1}}><GraphFilters filters={filters} setFilters={setFilters} /></div>}
         <div style={{flex: 4, zIndex: 12313123}}>
