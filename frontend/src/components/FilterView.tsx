@@ -103,7 +103,7 @@ const FilterView = () => {
     }
 
 
-    return <Wrapper>
+    return <Wrapper style={{width: 'auto'}}>
             <Paper elevation={5} style={{ padding: '20px 50px'}}>
 
                 <Title>

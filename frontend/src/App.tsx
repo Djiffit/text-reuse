@@ -32,11 +32,11 @@ const HeaderTitle = styled.h5`
 const App: React.FC = () => {
   const [things, setThings] = useState([{}])
   return (
-    <div style={{ maxWidth: '100vw' }}>
+    <div style={{ maxWidth: '100vw', paddingTop: '100px' }}>
       <ApolloProvider client={client}>
         <Provider store={store}>
           <Router>
-            <AppBar position='static' color='secondary'>
+            <AppBar style={{zIndex: 999999999}} position='fixed' color='secondary'>
               <HeaderTitle>
                 Text reuse application
               </HeaderTitle>

@@ -58,7 +58,7 @@ const GraphWrapper = () => {
 
     return (<GridWrapper>
         {sideBar && <div style={{flex: 1}}><GraphFilters filters={filters} setFilters={setFilters} /></div>}
-        <div style={{flex: 4}}>
+        <div style={{flex: 4, zIndex: 12313123}}>
             <GraphList graphFilters={filters} />
             <div style={{position: 'fixed', left: '20px', bottom: '30px'}}>
                 <Button variant='contained' color='secondary' onClick={() => toggleBar(!sideBar)}>Toggle side</Button>
@@ -137,7 +137,7 @@ const GraphList = ({ graphFilters }) => {
             'aria-controls': `full-width-tabpanel-${index}`,
         }
     }
-    
+
     const getTextsById = (texts) => {
         const textsById = {}
         const t = texts.map(t => t)
@@ -148,16 +148,16 @@ const GraphList = ({ graphFilters }) => {
     }
 
     let textsById = getTextsById(text)
-    
+
     const originalSources = Array.from(new Set(reuse.map(r => r.source)))
     const sources = new Set(filterNodes(graphFilters, originalSources.map((id: any) => textsById[id])).map(n => n.id))
     const sourceByKey = new Set(Array.from(sources).map((k: any) => textsById[k][graphFilters.key]))
     let reuses = reuse.map(r => r)
     if (hideSubFiltered || sameYear || sameAuthor || sameLocation || sourceNodes) {
         reuses = reuses.filter(({ source, reuser }) => (!hideSubFiltered || sources.has(source))
-                                                        && (!sameYear || textsById[source].year !== textsById[reuser].year) 
-                                                        && (!sameAuthor || textsById[source].author !== textsById[reuser].author) 
-                                                        && (!sameLocation || textsById[source].location !== textsById[reuser].location) 
+                                                        && (!sameYear || textsById[source].year !== textsById[reuser].year)
+                                                        && (!sameAuthor || textsById[source].author !== textsById[reuser].author)
+                                                        && (!sameLocation || textsById[source].location !== textsById[reuser].location)
                                                         && (!sourceNodes || !sources.has(reuser)))
     }
 
@@ -170,7 +170,7 @@ const GraphList = ({ graphFilters }) => {
             try {
                 textsById[source].output = (textsById[source].output || 0) + count
                 textsById[reuser].input = (textsById[reuser].input || 0) + count
-    
+
                 textsById[source].input = (textsById[source].input || 0)
                 textsById[reuser].output = (textsById[reuser].output || 0)
                 allNodes.add(source)
@@ -180,11 +180,11 @@ const GraphList = ({ graphFilters }) => {
             }
         })
         return {textsById, allNodes}
-        
+
     }
 
     const newData = addConnections(textsById, reuses)
-    
+
     textsById = newData.textsById
     const allNodes = newData.allNodes
 
@@ -249,9 +249,9 @@ const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) =
                 //     }
                 // }}
                 onNodeClick={(node) => {
-                    if (idKey === 'id') {
-                        setFrozen(0)
-                    }
+                    // if (idKey === 'id') {
+                    //     setFrozen(0)
+                    // }
                     setActiveNode(node)
                 }}
                 height={window.innerHeight * 0.8}
@@ -389,11 +389,11 @@ const Visualizations = ({ nodes, edges, graphFilters }) => {
             <BarGraph title={`Author connections (${Object.keys(authorsById).length} unique authors)`} label={'Number of connections'} data={Object.entries(authorsById)
                     .map((arr: any) => ({connections: countConnections(arr[1]), name: arr[0]})).filter(({name}) => name.includes(barAuthorFilter))
                     .sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(barChartEntryStart, barChartEntryEnd)}/>
-            
+
             <BarGraph title={`Year connections (${Object.keys(yearsById).length} unique years)`} label={'Number of connections'} data={Object.entries(yearsById)
                     .map((arr: any) => ({connections: countConnections(arr[1]), name: arr[0]}))
                     .sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(barChartEntryStart, barChartEntryEnd)}/>
-            
+
             <BarGraph title={`Location connections (${Object.keys(locationsById).length} unique locations)`} label={'Number of connections'} data={Object.entries(locationsById)
                     .map((arr: any) => ({connections: countConnections(arr[1]), name: arr[0]}))
                     .sort((a: any, b: any) => a.connections < b.connections ? 1 : -1).slice(barChartEntryStart, barChartEntryEnd)}/>
