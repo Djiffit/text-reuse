@@ -113,7 +113,6 @@ const filterNodes = (filters, nodes) => {
 
 const GraphList = ({ graphFilters }) => {
     const [active, setActive] = useState(new Set([]))
-    const [activeNode, setActiveNode] = useState({}) as any
     const [value, setValue] = useState(1)
     const filters = useSelector((state: FilterState) => state)
     // const { loading, error, data } = useQuery(GET_CONNECTIONS, {
@@ -204,9 +203,6 @@ const GraphList = ({ graphFilters }) => {
 
     const texts = text.filter((t: any) => allNodes.has(t.id)).map(t => ({...t, input: textsById[t.id].input, output: textsById[t.id].output}))
 
-
-    // console.log(Object.values(texts_by_id), texts_by_id, texts)
-
     return <div>
         <CSVLink filename={'text-reuse-export.csv'} data={makeCSV(reuses, texts)}>Download data as CSV</CSVLink>
         <Paper style={{ marginRight: '50px', marginLeft: '30px', maxWidth: '95%' }}>
@@ -222,23 +218,19 @@ const GraphList = ({ graphFilters }) => {
                 <Tab label='Node and edge visualization' {...a11yProps(1)} />
                 <Tab label='Node data list' {...a11yProps(2)} />
             </Tabs>
-            {<div style={{ display: value !== 0 ? 'none' : 'inherit' }}>
-                {activeNode && value === 0 && activeNode.id && <Paper style={{ padding: '10px', position: 'absolute', marginLeft: '30px', marginTop: '30px', zIndex: 1000000, backgroundColor: 'white', width: '300px' }}>
-                    {activeNode.id && <p style={{ margin: 0 }}><b>ID:</b> {activeNode.id}</p>}
-                    {activeNode.title && <p style={{ margin: 0 }}><b>Title:</b> {activeNode.title}</p>}
-                    {activeNode.author && <p style={{ margin: 0 }}><b>Authors:</b> {activeNode.author.split('|||').join(', ')}</p>}
-                    {activeNode.location && <p style={{ margin: 0 }}><b>Location:</b> {activeNode.location}</p>}
-                    {activeNode.year && <p style={{ margin: 0 }}><b>Year:</b> {activeNode.year}</p>}
-                </Paper>}
-                { <GraphVis idKey={graphFilters.key} sources={graphFilters.key === 'id' ? sources : sourceByKey} setActiveNode={setActiveNode} nodesById={textsById} texts={texts} reuses={reuses} />}
-            </div>}
+            <div style={{ display: value !== 0 ? 'none' : 'inherit' }}>
+                <GraphVis idKey={graphFilters.key} sources={graphFilters.key === 'id' ? sources : sourceByKey} nodesById={textsById} texts={texts} reuses={reuses} />
+            </div>
             {<div style={{ display: value !== 1 ? 'none' : 'inherit' }}><Visualizations graphFilters={graphFilters} nodes={texts} edges={reuses} /></div>}
             {<div style={{ display: value !== 2 ? 'none' : 'inherit' }}><NodeLists reuses={reuses} sources={sources} texts={texts} textsById={textsById} /></div>}
         </Paper>
     </div >
 }
 
-const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) => {
+const GraphVis = React.memo(({ texts, sources, reuses, nodesById, idKey }: any) => {
+    const [activeNode, setActiveNode] = useState('') as any
+    const w = window as any
+    const graf = React.createRef() as any
     const [frozen, setFrozen] = useState(10000)
     if (idKey !== 'id' && frozen !== 10000) {
         setFrozen(10000)
@@ -250,22 +242,32 @@ const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) =
 
     return (
         <div>
+            {activeNode && activeNode.id && <Paper onClick={() => {
+                    setActiveNode({})
+                    setFrozen(1000)
+                }} style={{ padding: '10px', position: 'absolute', marginLeft: '30px', marginTop: '30px', zIndex: 1000000, backgroundColor: 'white', width: '300px' }}>
+                {activeNode.id && <p style={{ margin: 0 }}><b>ID:</b> {activeNode.id}</p>}
+                {activeNode.title && <p style={{ margin: 0 }}><b>Title:</b> {activeNode.title}</p>}
+                {activeNode.author && <p style={{ margin: 0 }}><b>Authors:</b> {activeNode.author.split('|||').join(', ')}</p>}
+                {activeNode.location && <p style={{ margin: 0 }}><b>Location:</b> {activeNode.location}</p>}
+                {activeNode.year && <p style={{ margin: 0 }}><b>Year:</b> {activeNode.year}</p>}
+            </Paper>}
             <ForceGraph2D
-                graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][idKey], target: nodesById[reuser][idKey], value: count })).filter(({ source, target }) => source !== target) }}
+                graphData={{ nodes: nodearr, links: reuses.map(({ source, reuser, count }) => ({ source: nodesById[source][idKey], target: nodesById[reuser][idKey], value: count }))
+                                                          .filter(({ source, target }) => source !== target) }}
                 width={window.innerWidth * 0.8}
                 nodeId={idKey}
-                // onNodeHover={(node) => {
-                //     if (idKey === 'id') {
-                //         setFrozen(0)
-                //     }
-                //     if (idKey === 'id' && node) {
-                //         setActiveNode(node || {})
-                //     }
-                // }}
+                ref={graf}
+                onNodeHover={(node) => {
+                    if (idKey === 'id' && node) {
+                        setFrozen(0)
+                        setActiveNode(node)
+                    }
+                }}
                 onNodeClick={(node) => {
-                    // if (idKey === 'id') {
-                    //     setFrozen(0)
-                    // }
+                    if (idKey === 'id') {
+                        graf.current.pauseAnimation()
+                    }
                     setActiveNode(node)
                 }}
                 height={window.innerHeight * 0.8}
@@ -289,7 +291,7 @@ const GraphVis = ({ texts, sources, reuses, setActiveNode, nodesById, idKey }) =
             />
         </div >
     )
-}
+})
 
 const BarGraph = ({data, title, label}) => {
     const chartProps = {
