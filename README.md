@@ -16,11 +16,12 @@ Most likely you will also want to:
 ### Running the application
 
 To run the application, go to the root folder and execute
-
 ```
 docker-compose up --build
 ```
 
+Or you can go separately to the `frontend` and `backend` folders and `run yarn` and `yarn start` in both of them. Might be easier both should work.
+
 You might need to add the root folder to Docker in: ` Docker -> Preferences -> File sharing`
 
-After running this command, the UI should be running at `localhost:3000`, database running at `bolt://localhost:7687` with UI access at `http://localhost:7474/` using credentials `neo4j:test` and the API at `localhost:5000`
+After running this command, the UI should be running at `localhost:3000`, graphql API at `localhost:8000`, database should be remote.
